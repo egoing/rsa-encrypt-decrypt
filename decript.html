@@ -1,0 +1,36 @@
+<html>
+
+<head>
+    <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="jsencrypt.min.js"></script>
+    <script>
+        
+    </script>
+    <style>
+        body{padding:2rem;}
+        textarea{width:100%}
+    </style>
+</head>
+
+<body>
+
+    <h2>비밀키</h2>
+    <textarea name="" id="privateKey" cols="30" rows="10" onChange=""></textarea>
+
+    <h2>암호화된 당첨정보</h2>
+    <textarea name="" id="chiperText" cols="30" rows="10" onChange=""></textarea>
+
+
+    <h2>암호화된 정보</h2>
+    <textarea name="" id="plainText" cols="30" rows="10" onChange=""></textarea>
+
+    <script>
+        $('#chiperText').change(function (e) {
+            var enc = new JSEncrypt();
+            enc.setPrivateKey($('#privateKey').val());
+            $('#plainText').val(enc.decrypt($(e.target).val()));
+        });
+    </script>
+</body>
+
+</html>

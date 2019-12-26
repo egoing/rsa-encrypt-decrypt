@@ -1,0 +1,116 @@
+<html>
+
+<head>
+    <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="jsencrypt.min.js"></script>
+    <script src="redux.js"></script>
+    <script>
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split('&');
+            for (var i = 0; i < vars.length; i++) {
+                var pair = vars[i].split('=');
+                if (decodeURIComponent(pair[0]) == variable) {
+                    return decodeURIComponent(pair[1]);
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            padding: 2rem;
+        }
+
+        textarea {
+            width: 100%
+        }
+    </style>
+</head>
+
+<body>
+    <h1>당첨을 축하합니다!</h1>
+    아래 텍스트 필드에 이름/주소/우편번호/전화번호/이메일을 적어주시면 암호화된 문자가 생성됩니다. 암호문은 비밀키를 가지고 있는 사람만 볼 수 있습니다.
+    <h2>당첨정보</h2>
+    <textarea name="" id="plainText" cols="30" rows="10" onChange=""></textarea>
+    <h2>암호화된 정보</h2>
+    아래에 생성된 암호문을 비밀키를 가지고 있는 사람에게 전해주세요. 비밀키를 가진 사람만 원래의 정보를 알 수 있습니다.
+    <textarea name="" id="chiperText" cols="30" rows="10" onChange=""></textarea>
+
+    <h2>공개키</h2>
+    아래는 공개키라는 것입니다. 모르셔도 됩니다.
+    <textarea id="publicKey" cols="30" rows="10"></textarea>
+    <script>
+        var store = Redux.createStore(function (state, action) {
+            var newState = {}
+            if (state === undefined) {
+                return {
+                    plainText: `이름:
+주소:
+우편번호:
+전화번호:
+이메일:`,
+                    publicKey: ''
+                }
+            }
+
+            if (action.type === 'CHANGE_PUBLICKEY') {
+                return Object.assign({}, state, {
+                    publicKey: action.value
+                });
+            }
+
+            if (action.type === 'CHANGE_PLAINTEXT') {
+                return Object.assign({}, state, {
+                    plainText: action.value
+                });
+            }
+            return state;
+        });
+
+        function plainTextHandler() {
+            var state = store.getState();
+            $('#plainText').val(state.plainText);
+        }
+        store.subscribe(plainTextHandler);
+        $('#plainText').change(function (e) {
+            store.dispatch({
+                type: 'CHANGE_PLAINTEXT',
+                value: $('#plainText').val()
+            })
+        });
+
+        function chiperTextHandler() {
+            var state = store.getState();
+            var publicKey = state.publicKey;
+            var plainText = state.plainText;
+            var enc = new JSEncrypt();
+            // 무한루프 발생
+            enc.setPublicKey(publicKey);
+            var encrypted = enc.encrypt(plainText);
+            $('#chiperText').val(encrypted);
+        }
+        store.subscribe(chiperTextHandler);
+
+        function publicKeyHandler() {
+            var state = store.getState();
+            if(state.publicKey == '' || state.publicKey === undefined){
+                return;
+            }
+            $('#publicKey').val(state.publicKey);
+            history.pushState(null, "", "?pk="+encodeURIComponent(state.publicKey));
+        }
+        store.subscribe(publicKeyHandler);
+        store.dispatch({
+            type: 'CHANGE_PUBLICKEY',
+            value: getQueryVariable('pk')
+        });
+        $('#publicKey').change(function (e) {
+            store.dispatch({
+                type: 'CHANGE_PUBLICKEY',
+                value: $('#publicKey').val()
+            })
+        });
+    </script>
+</body>
+
+</html>
