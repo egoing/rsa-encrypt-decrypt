@@ -32,23 +32,20 @@
     아래 텍스트 필드에 이름/주소/우편번호/전화번호/이메일을 적어주시면 암호화된 문자가 생성됩니다. 암호문은 비밀키를 가지고 있는 사람만 볼 수 있습니다.
     <h2>당첨정보</h2>
     <textarea name="" id="plainText" cols="30" rows="10" onChange=""></textarea>
+
     <h2>암호화된 정보</h2>
     아래에 생성된 암호문을 비밀키를 가지고 있는 사람에게 전해주세요. 비밀키를 가진 사람만 원래의 정보를 알 수 있습니다.
     <textarea name="" id="chiperText" cols="30" rows="10" onChange=""></textarea>
 
     <h2>공개키</h2>
-    아래는 공개키라는 것입니다. 모르셔도 됩니다.
+    아래는 공개키라는 것입니다. 의미를 모르시는 분은 무시해주세요.
     <textarea id="publicKey" cols="30" rows="10"></textarea>
     <script>
-        var store = Redux.createStore(function (state, action) {
+        function reducer(state, action) {
             var newState = {}
-            if (state === undefined) {
+            if (!state) {
                 return {
-                    plainText: `이름:
-주소:
-우편번호:
-전화번호:
-이메일:`,
+                    plainText: '',
                     publicKey: ''
                 }
             }
@@ -65,11 +62,20 @@
                 });
             }
             return state;
-        });
+        }
+        store = Redux.createStore(
+            reducer, /* preloadedState, */
+            +window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+        );
+
 
         function plainTextHandler() {
             var state = store.getState();
+            if (state.plainText == '' || state.plainText === undefined) {
+                return;
+            }
             $('#plainText').val(state.plainText);
+            history.pushState(null, "", "?pk=" + encodeURIComponent(state.publicKey) + "&pt=" + encodeURIComponent(state.plainText));
         }
         store.subscribe(plainTextHandler);
         $('#plainText').change(function (e) {
@@ -93,23 +99,27 @@
 
         function publicKeyHandler() {
             var state = store.getState();
-            if(state.publicKey == '' || state.publicKey === undefined){
+            if (state.publicKey == '' || state.publicKey === undefined) {
                 return;
             }
             $('#publicKey').val(state.publicKey);
-            history.pushState(null, "", "?pk="+encodeURIComponent(state.publicKey));
+            // history.pushState(null, "", "?pk=" + encodeURIComponent(state.publicKey) + "&pt=" + encodeURIComponent(state.plainText));
         }
         store.subscribe(publicKeyHandler);
-        store.dispatch({
-            type: 'CHANGE_PUBLICKEY',
-            value: getQueryVariable('pk')
-        });
         $('#publicKey').change(function (e) {
             store.dispatch({
                 type: 'CHANGE_PUBLICKEY',
                 value: $('#publicKey').val()
-            })
+            });
         });
+        store.dispatch({
+            type: 'CHANGE_PUBLICKEY',
+            value: getQueryVariable('pk')
+        });
+        store.dispatch({
+            type: 'CHANGE_PLAINTEXT',
+            value: getQueryVariable('pt')
+        })
     </script>
 </body>
 
